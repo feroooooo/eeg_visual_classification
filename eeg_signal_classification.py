@@ -8,10 +8,13 @@ parser = argparse.ArgumentParser(description="Template")
 ### BLOCK DESIGN ###
 #Data
 #parser.add_argument('-ed', '--eeg-dataset', default=r"data\block\eeg_55_95_std.pth", help="EEG dataset path") #55-95Hz
-parser.add_argument('-ed', '--eeg-dataset', default=r"data\block\eeg_5_95_std.pth", help="EEG dataset path") #5-95Hz
+#parser.add_argument('-ed', '--eeg-dataset', default=r"data\block\eeg_5_95_std.pth", help="EEG dataset path") #5-95Hz
 #parser.add_argument('-ed', '--eeg-dataset', default=r"data\block\eeg_14_70_std.pth", help="EEG dataset path") #14-70Hz
+parser.add_argument('-ed', '--eeg-dataset', default=r"/mars/zhangwenjiang/data/eeg-visual-data/eeg_5_95_std.pth", help="EEG dataset path") #adjust
 #Splits
-parser.add_argument('-sp', '--splits-path', default=r"data\block\block_splits_by_image_all.pth", help="splits path") #All subjects
+#parser.add_argument('-sp', '--splits-path', default=r"data\block\block_splits_by_image_all.pth", help="splits path") #All subjects
+# parser.add_argument('-sp', '--splits-path', default=r"/mars/zhangwenjiang/data/eeg-visual-data/block_splits_by_image_all.pth", help="splits path") #adjust
+parser.add_argument('-sp', '--splits-path', default=r"/mars/zhangwenjiang/data/eeg-visual-data/block_splits_by_image_single.pth", help="splits path") #adjust
 #parser.add_argument('-sp', '--splits-path', default=r"data\block\block_splits_by_image_single.pth", help="splits path") #Single subject
 ### BLOCK DESIGN ###
 
@@ -135,6 +138,19 @@ class Splitter:
 dataset = EEGDataset(opt.eeg_dataset)
 # Create loaders
 loaders = {split: DataLoader(Splitter(dataset, split_path = opt.splits_path, split_num = opt.split_num, split_name = split), batch_size = opt.batch_size, drop_last = True, shuffle = True) for split in ["train", "val", "test"]}
+
+
+# Calculate subjects in each splitter
+for split_name in ["train", "val", "test"]:
+    idx_list = loaders[split_name].dataset.split_idx
+    subject_id_map = {}
+    for i in range(len(loaders[split_name].dataset)):
+        subject_id = loaders[split_name].dataset.dataset.data[idx_list[i]]['subject']
+        if subject_id in subject_id_map:
+            subject_id_map[subject_id] += 1
+        else:
+            subject_id_map[subject_id] = 0
+    print(f"{split_name}: {subject_id_map}")
 
 # Load model
 
